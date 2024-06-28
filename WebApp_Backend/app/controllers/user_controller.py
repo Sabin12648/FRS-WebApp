@@ -97,9 +97,6 @@ import tempfile
 import cv2
 import traceback
 
-# Define the directory where images are stored
-# Ensure this matches the actual directory structure on your system
-UPLOAD_FOLDER = '/home/sabin/Desktop/FRS-system/submitted_faces'
 
 # Blueprint for user routes
 user_bp = Blueprint('user_bp', __name__)
@@ -234,8 +231,4 @@ def login():
 
     # Login successful, you can generate a session token or return user information
     return jsonify({'message': 'Login successful', 'access_token': access_token}), 200
-# Register the blueprint with the main Flask app
-# app.register_blueprint(user_bp)
 
-# if __name__ == '__main__':
-#     app.run(debug=True)  # Run the Flask application in debug mode
