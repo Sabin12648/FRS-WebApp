@@ -85,7 +85,7 @@
 # # #         return jsonify({"error": str(e)}), 500
     
 import os
-from flask import Flask, request, jsonify, Blueprint, current_app
+from flask import Flask, request, jsonify, Blueprint
 from app.models import User, db, Registration
 from flask_jwt_extended import create_access_token, jwt_required
 import face_recognition
@@ -93,10 +93,8 @@ from werkzeug.utils import secure_filename
 import logging
 from PIL import Image
 import numpy as np
-import tempfile
 import cv2
 import traceback
-
 
 # Blueprint for user routes
 user_bp = Blueprint('user_bp', __name__)
@@ -106,7 +104,6 @@ ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg'}
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
-
 
 def convert_image_to_rgb(file_path):
     try:
@@ -130,30 +127,27 @@ def extract_face_encoding(photo_path):
             return None
         
         print(f"Loading image file for face recognition: {photo_path}")
-        # Load image with OpenCV
         submitted_image = cv2.imread(photo_path)
 
-         # Check if the image was loaded correctly
         if submitted_image is None:
             raise ValueError("Could not load image, ensure the path is correct and the image file is accessible.")
 
-
-         # Print out shape and dtype of the image
         print(f"Image shape: {submitted_image.shape}")
         print(f"Image dtype: {submitted_image.dtype}")
 
-        if submitted_image.dtype != 'uint8' or len(submitted_image.shape) != 3 or submitted_image.shape[2] != 3:
-            raise ValueError('Unsupportedddd image type, must be 8bit gray or RGB image.')
-        else:
-            print("Image is in correct format (8bit RGB).")
-        
         # Try converting the image to grayscale and back to RGB (if necessary)
-        if submitted_image.shape[2] == 3:
+        if submitted_image.shape[2] == 4:
             print("Converting image to grayscale and back to RGB for testing purposes.")
-            gray_image = cv2.cvtColor(submitted_image, cv2.COLOR_RGB2GRAY)
-            submitted_image = cv2.cvtColor(gray_image, cv2.COLOR_GRAY2RGB)
-
-        # Extract face encodings   
+            submitted_image = cv2.cvtColor(submitted_image, cv2.COLOR_RGBA2RGB)
+           
+            # submitted_image = cv2.cvtColor(gray_image, cv2.COLOR_GRAY2RGB)
+        submitted_image = cv2.cvtColor(submitted_image, cv2.COLOR_RGB2GRAY)    
+        # if submitted_image.dtype != np.uint8 or len(submitted_image.shape) != 3 or submitted_image.shape[2] != 3:
+        #     raise ValueError('Unsupported image type, must be 8bit gray or RGB image.')
+        # else:
+        #     print("Image is in correct format (8bit RGB).")
+        
+        # Directly use the image for face recognition without additional conversions
         submitted_face_encodings = face_recognition.face_encodings(submitted_image)
         if len(submitted_face_encodings) > 0:
             print("Face encoding found.")
@@ -165,53 +159,47 @@ def extract_face_encoding(photo_path):
         print("Error extracting face encoding:", e)
         traceback.print_exc()
         return None
-    
+
 @user_bp.route('/upload_photos', methods=['POST'])
 def upload_photos():
-    
     if not os.path.exists(UPLOAD_FOLDER):
-            os.makedirs(UPLOAD_FOLDER)
+        os.makedirs(UPLOAD_FOLDER)
 
     if 'photos' not in request.files:
         return jsonify({'message': 'No file part'}), 400
 
-    files = request.files.getlist('photos')   
+    files = request.files.getlist('photos')
     face_encodings = []
 
     for file in files:
-            if file.filename == '':
-                return jsonify({'error': 'Empty filename'}), 400
-            
-            if file and allowed_file(file.filename):           
-                filename = secure_filename(file.filename)
-                file_path = os.path.join(UPLOAD_FOLDER, filename)
-                file.save(file_path)
+        if file.filename == '':
+            return jsonify({'error': 'Empty filename'}), 400
 
-                # Convert the image to RGB and JPEG format
-                jpeg_file_path = convert_image_to_rgb(file_path)
-                if jpeg_file_path is None:
-                    return jsonify({'message': 'Error converting image to RGB'}), 500
-                
-                os.remove(file_path)  # Remove the original file
+        if file and allowed_file(file.filename):
+            filename = secure_filename(file.filename)
+            file_path = os.path.join(UPLOAD_FOLDER, filename)
+            file.save(file_path)
 
-                 # Ensure the converted file exists and is accessible
-                if not os.path.exists(jpeg_file_path):
-                    print(f"Converted file does not exist: {jpeg_file_path}")
-                    return jsonify({'message': 'File conversion failed'}), 500
+            jpeg_file_path = convert_image_to_rgb(file_path)
+            if jpeg_file_path is None:
+                return jsonify({'message': 'Error converting image to RGB'}), 500
 
-                # Extract face encoding
-                face_encoding = extract_face_encoding(jpeg_file_path)
-                if face_encoding is not None:
-                    face_encodings.append(face_encoding)
-                else:
-                    os.remove(jpeg_file_path)  # Remove file if no face encoding is found
+            os.remove(file_path)  # Remove the original file
 
+            if not os.path.exists(jpeg_file_path):
+                print(f"Converted file does not exist: {jpeg_file_path}")
+                return jsonify({'message': 'File conversion failed'}), 500
+
+            face_encoding = extract_face_encoding(jpeg_file_path)
+            if face_encoding is not None:
+                face_encodings.append(face_encoding)
             else:
-                return jsonify({'message': 'Unsupported file type'}), 400
+                os.remove(jpeg_file_path)  # Remove file if no face encoding is found
+        else:
+            return jsonify({'message': 'Unsupported file type'}), 400
 
-    return jsonify({'message': 'Files successfully uploaded'}), 200
+    return jsonify({'message': 'Files successfully uploaded', 'encodings': face_encodings}), 200
 
-    
 @user_bp.route('/login', methods=['POST'])
 def login():
     data = request.get_json()
@@ -226,9 +214,5 @@ def login():
     if not user or not password:
         return jsonify({'message': 'Invalid username or password'}), 401
     
-    # Create a new token with the user id inside
     access_token = create_access_token(identity=user.id)
-
-    # Login successful, you can generate a session token or return user information
     return jsonify({'message': 'Login successful', 'access_token': access_token}), 200
-
