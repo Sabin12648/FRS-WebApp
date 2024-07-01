@@ -1,6 +1,7 @@
 #models.py
 from app import db
 from werkzeug.security import generate_password_hash, check_password_hash
+from sqlalchemy.dialects.postgresql import JSONB
 
 # class User(db.Model):
 #     __tablename__ = 'frs_db'
@@ -50,7 +51,7 @@ class User(db.Model):
     address = db.Column(db.String, nullable=True)
     email = db.Column(db.String, nullable=True)
     mobile_number = db.Column(db.String, nullable=True)
-    face_encoding = db.Column(db.PickleType, nullable=False)
+    face_encoding = db.Column(JSONB, nullable=False)
     photo_filename = db.Column(db.String, nullable=False)
 
     # def to_dict(self):

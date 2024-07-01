@@ -42,28 +42,6 @@
 # # #     return jsonify(updated_user), 200
 
 
-
-# # # @user_bp.route('/login', methods=['POST'])
-# # # def login():
-# # #     data = request.get_json()
-# # #     username = data.get('username')
-# # #     password = data.get('password')
-
-# # #     if not username or not password:
-# # #         return jsonify({'message': 'Missing username or password'}), 400
-
-# # #     user = Registration.query.filter_by(username=username).first()
-
-# # #     if not user or not password:
-# # #         return jsonify({'message': 'Invalid username or password'}), 401
-    
-# # #      # Create a new token with the user id inside
-# # #     access_token = create_access_token(identity=user.id)
-
-# # #     # Login successful, you can generate a session token or return user information
-# # #     return jsonify({'message': 'Login successful', 'access_token': access_token}), 200
-
-
 # # # @user_bp.route('/get_image/<photo_filename>', methods=['GET'])
 # # # @jwt_required()
 # # # def get_image(photo_filename):
@@ -95,6 +73,7 @@ from PIL import Image
 import numpy as np
 import cv2
 import traceback
+import json
 
 # Blueprint for user routes
 user_bp = Blueprint('user_bp', __name__)
@@ -125,9 +104,10 @@ def extract_face_encoding(photo_path):
         if not os.path.exists(photo_path):
             print(f"File does not exist: {photo_path}")
             return None
-        
+
         print(f"Loading image file for face recognition: {photo_path}")
-        submitted_image = cv2.imread(photo_path)
+        # Load the image file into a variable
+        submitted_image = face_recognition.load_image_file(photo_path)
 
         if submitted_image is None:
             raise ValueError("Could not load image, ensure the path is correct and the image file is accessible.")
@@ -135,23 +115,36 @@ def extract_face_encoding(photo_path):
         print(f"Image shape: {submitted_image.shape}")
         print(f"Image dtype: {submitted_image.dtype}")
 
-        # Try converting the image to grayscale and back to RGB (if necessary)
+        # Ensure the image has three color channels
         if submitted_image.shape[2] == 4:
-            print("Converting image to grayscale and back to RGB for testing purposes.")
+            print("Image has 4 channels, converting to RGB.")
             submitted_image = cv2.cvtColor(submitted_image, cv2.COLOR_RGBA2RGB)
-           
-            # submitted_image = cv2.cvtColor(gray_image, cv2.COLOR_GRAY2RGB)
-        submitted_image = cv2.cvtColor(submitted_image, cv2.COLOR_RGB2GRAY)    
-        # if submitted_image.dtype != np.uint8 or len(submitted_image.shape) != 3 or submitted_image.shape[2] != 3:
-        #     raise ValueError('Unsupported image type, must be 8bit gray or RGB image.')
-        # else:
-        #     print("Image is in correct format (8bit RGB).")
-        
-        # Directly use the image for face recognition without additional conversions
-        submitted_face_encodings = face_recognition.face_encodings(submitted_image)
-        if len(submitted_face_encodings) > 0:
-            print("Face encoding found.")
-            return submitted_face_encodings[0]
+        elif submitted_image.shape[2] == 1:
+            print("Image is grayscale, converting to RGB.")
+            submitted_image = cv2.cvtColor(submitted_image, cv2.COLOR_GRAY2RGB)
+        elif submitted_image.shape[2] != 3:
+            raise ValueError('Unsupported image type, must be an RGB image with 3 channels.')
+
+        # Convert the image to RGB (if not already in RGB format)
+        rgb_image = np.ascontiguousarray(submitted_image[:, :, ::-1])
+        # Print the shape and dtype of the image
+        print(f"RGB image shape: {rgb_image.shape}")
+        print(f"RGB image dtype: {rgb_image.dtype}")
+
+        # Find face locations
+        face_locations = face_recognition.face_locations(rgb_image)
+        if not face_locations:
+            print("No faces found in the image.")
+            return None
+
+        # Print face locations
+        print(f"Face locations: {face_locations}")
+
+        # Extract face encodings
+        face_encodings = face_recognition.face_encodings(rgb_image, face_locations)
+        if face_encodings:
+            print(f"Face encoding found.")
+            return face_encodings[0]
         else:
             print("No face encodings found.")
             return None
@@ -159,6 +152,7 @@ def extract_face_encoding(photo_path):
         print("Error extracting face encoding:", e)
         traceback.print_exc()
         return None
+
 
 @user_bp.route('/upload_photos', methods=['POST'])
 def upload_photos():
@@ -192,7 +186,14 @@ def upload_photos():
 
             face_encoding = extract_face_encoding(jpeg_file_path)
             if face_encoding is not None:
-                face_encodings.append(face_encoding)
+                # Convert the face encoding to a list before serialization
+                face_encoding_list = face_encoding.tolist()
+                face_encoding_json = json.dumps(face_encoding_list)
+                face_encodings.append(face_encoding_list)
+                # Insert into the database
+                new_user = User(photo_filename=filename, face_encoding=face_encoding_list)
+                db.session.add(new_user)
+                db.session.commit()
             else:
                 os.remove(jpeg_file_path)  # Remove file if no face encoding is found
         else:
