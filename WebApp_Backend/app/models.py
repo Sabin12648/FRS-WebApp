@@ -54,13 +54,13 @@ class User(db.Model):
     face_encoding = db.Column(JSONB, nullable=False)
     photo_filename = db.Column(db.String, nullable=False)
 
-    # def to_dict(self):
-    #     return {
-    #         "id": self.id,
-    #         "name": self.name,
-    #         "email": self.email,
-    #         "address": self.address,
-    #         "face_encoding": self.face_encoding,
-    #         "mobile_number": self.mobile_number,
-    #         "photo_filename": self.photo_filename,
-    #     }
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "name": self.name,
+            "email": self.email,
+            "address": self.address,
+            "face_encoding": self.face_encoding,
+            "mobile_number": self.mobile_number,
+            "photo_filename": self.photo_filename,
+        }
