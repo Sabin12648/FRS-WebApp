@@ -1,10 +1,13 @@
 import React, { useState, ChangeEvent, FormEvent } from "react";
 import Breadcrumb from "../components/Breadcrumbs/Breadcrumb";
 import DefaultLayout from "../layout/DefaultLayout";
+import { toast } from "react-toastify";
 
 const BulkUpload: React.FC = () => {
   const [files, setFiles] = useState<FileList | null>(null);
   const [previews, setPreviews] = useState<string[]>([]);
+  const [uploading, setUploading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
     const fileList = event.target.files;
@@ -21,15 +24,23 @@ const BulkUpload: React.FC = () => {
 
   const handleUpload = async (event: FormEvent) => {
     event.preventDefault();
+    setErrorMessage(null);
+
     if (!files || files.length === 0) {
-      alert("Please select files to upload");
+      setErrorMessage("Please select files to upload");
       return;
     }
   
     const allowedTypes = ['image/png', 'image/jpeg', 'image/jpg'];
+    const maxSize = 5 * 1024 * 1024; // 5MB
+
     for (let i = 0; i < files.length; i++) {
       if (!allowedTypes.includes(files[i].type)) {
-        alert("Unsupported file type: " + files[i].type);
+        setErrorMessage("Unsupported file type: " + files[i].type);
+        return;
+      }
+      if (files[i].size > maxSize) {
+        setErrorMessage("File size should not exceed 5MB: " + files[i].name);
         return;
       }
     }
@@ -38,6 +49,8 @@ const BulkUpload: React.FC = () => {
     for (let i = 0; i < files.length; i++) {
       formData.append("photos", files[i]);
     }
+
+    setUploading(true);
   
     try {
       const response = await fetch("http://127.0.0.1:5000/upload_photos", {
@@ -51,15 +64,21 @@ const BulkUpload: React.FC = () => {
       if (response.ok) {
         const result = await response.json();
         console.log("Upload successful:", result);
-        alert("Upload successful");
+        toast.success('Upload successful');
+        setFiles(null);
+        setPreviews([]);
       } else {
         const error = await response.json();
         console.error("Upload failed:", error);
-        alert("Upload failed: " + error.message);
+        setErrorMessage("Upload failed: " + error.message);
+        toast.error("Upload failed: " + error.message);
       }
     } catch (error) {
       console.error("Error uploading files:", error);
-      alert("Error uploading files");
+      toast.error("Error uploading files");
+      setErrorMessage("Error uploading files");
+    } finally {
+      setUploading(false);
     }
   };
   
@@ -117,6 +136,12 @@ const BulkUpload: React.FC = () => {
             </div>
           </div>
 
+          {errorMessage && (
+            <div className="mb-5.5 text-red-500">
+              {errorMessage}
+            </div>
+          )}
+
           {previews.length > 0 && (
             <div className="mb-5.5 h-full w-full grid grid-cols-2 gap-4">
               {previews.map((src, index) => (
@@ -134,8 +159,9 @@ const BulkUpload: React.FC = () => {
           <button
             type="submit"
             className="inline-flex items-center justify-center rounded-md border border-primary bg-primary py-2 px-6 text-center font-medium text-white hover:bg-opacity-90 lg:px-8 xl:px-10"
+            disabled={uploading}
           >
-            Upload
+            {uploading ? "Uploading..." : "Upload"}
           </button>
         </form>
       </div>
