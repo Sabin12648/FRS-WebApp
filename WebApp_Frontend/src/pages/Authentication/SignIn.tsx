@@ -26,6 +26,7 @@ const SignIn: React.FC = () => {
       if (response.ok) {
         // Handle successful login
         localStorage.setItem('token', data.access_token);
+        console.log('Token stored:', localStorage.getItem('token'));
         toast.success('Login successful');
         navigate('/');
       } else {

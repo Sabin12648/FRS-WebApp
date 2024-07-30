@@ -4,6 +4,7 @@ import PhotoComponent from '../PhotoDisplay';
 type ModalProps = {
   isOpen: boolean;
   onClose: () => void;
+  onConfirm: () => void;
   user: {
     id? : string;
     name?: string;
@@ -19,6 +20,7 @@ type ModalProps = {
 const ConfirmationModal: React.FC<ModalProps> = ({
   isOpen,
   onClose,
+  onConfirm,
   user,
   // onSave,
   children

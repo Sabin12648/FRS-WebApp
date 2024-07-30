@@ -53,6 +53,7 @@ class User(db.Model):
     mobile_number = db.Column(db.String, nullable=True)
     face_encoding = db.Column(JSONB, nullable=False)
     photo_filename = db.Column(db.String, nullable=False)
+    applicant_id = db.Column(db.String(100), unique=True, nullable=False)
 
     def to_dict(self):
         return {
@@ -63,4 +64,5 @@ class User(db.Model):
             "face_encoding": self.face_encoding,
             "mobile_number": self.mobile_number,
             "photo_filename": self.photo_filename,
+            "applicant_id":self.applicant_id 
         }

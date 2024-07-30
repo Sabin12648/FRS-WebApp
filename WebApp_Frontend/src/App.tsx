@@ -1,83 +1,13 @@
-// import { useEffect, useState } from 'react';
-// import { Route, Routes, useLocation } from 'react-router-dom';
-// import Loader from './common/Loader';
-// import PageTitle from './components/PageTitle';
-// import SignIn from './pages/Authentication/SignIn';
-// import ECommerce from './pages/Dashboard/ECommerce';
-// import Profile from './pages/Profile';
-// import Tables from './pages/DataManagement/Tables';
-
-// function App() {
-//   const [loading, setLoading] = useState<boolean>(true);
-//   const { pathname } = useLocation();
-
-//   useEffect(() => {
-//     window.scrollTo(0, 0);
-//   }, [pathname]);
-
-//   useEffect(() => {
-//     setTimeout(() => setLoading(false), 1000);
-//   }, []);
-
-//   return loading ? (
-//     <Loader />
-//   ) : (
-//     <>
-//       <Routes>
-//         <Route
-//           path="/"
-//           element={
-//             <>
-//               <PageTitle title="FRS Management System" />
-//               <ECommerce />
-//             </>
-//           }
-//         />
-//         <Route
-//           path="/profile"
-//           element={
-//             <>
-//               <PageTitle title="Profile" />
-//               <Profile />
-//             </>
-//           }
-//         />
-//         <Route
-//           path="/tables"
-//           element={
-//             <>
-//               <PageTitle title="Tables" />
-//               <Tables />
-//             </>
-//           }
-//         />
-//         <Route
-//           index
-//           // path="/auth/signin"
-//           element={
-//             <>
-//               <PageTitle title="Signin" />
-//               <SignIn />
-//             </>
-//           }
-//         />
-//       </Routes>
-//     </>
-//   );
-// }
-
-// export default App;
-
 
 import { useEffect, useState } from 'react';
 import { Route, Routes, useLocation, Navigate } from 'react-router-dom';
-import Loader from './common/Loader';
 import PageTitle from './components/PageTitle';
 import SignIn from './pages/Authentication/SignIn';
-import ECommerce from './pages/Dashboard/ECommerce';
 import Profile from './pages/Profile';
 import Tables from './pages/DataManagement/Tables';
 import BulkUpload from './pages/BulkUpload';
+import Dashboard from './pages/Dashboard/Dashboard';
+import Spinner from './components/Spinner';
 
 function App() {
   const [loading, setLoading] = useState<boolean>(true);
@@ -93,7 +23,7 @@ function App() {
   }, []);
 
   return loading ? (
-    <Loader />
+    <Spinner />
   ) : (
     <Routes>
       <Route
@@ -102,7 +32,7 @@ function App() {
           token ? (
             <>
               <PageTitle title="FRS Management System" />
-              <ECommerce />
+              <Dashboard />
             </>
           ) : (
             <Navigate to="/auth/signin" />
