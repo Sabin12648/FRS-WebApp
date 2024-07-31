@@ -53,7 +53,7 @@ const BulkUpload: React.FC = () => {
     setUploading(true);
   
     try {
-      const response = await fetch("http://127.0.0.1:5000/upload_photos", {
+      const response = await fetch("http://192.168.1.121:5000/upload_photos", {
         method: "POST",
         body: formData,
         headers: {

@@ -16,7 +16,7 @@ const PhotoComponent: React.FC<PhotoComponentProps> = ({ photoFilename, isEditMo
   useEffect(() => {
     if (!isEditMode) {
       const token = localStorage.getItem('token');
-      axios.get(`http://127.0.0.1:5000/get_image/${photoFilename}`, {
+      axios.get(`http://192.168.1.121:5000/get_image/${photoFilename}`, {
         headers: {
           Authorization: `Bearer ${token}`
         }

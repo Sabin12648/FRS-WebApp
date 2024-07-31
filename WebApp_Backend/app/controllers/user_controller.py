@@ -1,7 +1,7 @@
 
 import os
 from flask import Flask, request, jsonify, Blueprint
-from app.models import User, db, Registration
+from app.models import User, Registration
 from flask_jwt_extended import create_access_token, jwt_required
 import face_recognition
 from werkzeug.utils import secure_filename
@@ -12,6 +12,8 @@ import cv2
 import traceback
 import json
 import base64
+from app import db
+
 
 # Blueprint for user routes
 user_bp = Blueprint('user_bp', __name__)
@@ -267,6 +269,51 @@ def upload_user():
         return jsonify({'message': 'No face encoding found'}), 500
 
 
+# @user_bp.route('/users/<int:user_id>/update_photo', methods=['PUT'])
+# # @jwt_required()
+# def update_user_photo(user_id):
+#     user = User.query.get(user_id)
+#     if not user:
+#         return jsonify({"error": "User not found"}), 404
+
+#     if 'photo' not in request.files:
+#         return jsonify({'message': 'No file part'}), 400
+
+#     file = request.files['photo']
+#     if file.filename == '':
+#         return jsonify({'error': 'Empty filename'}), 400
+
+#     if file and allowed_file(file.filename):
+#         # Secure the filename and save the new photo
+#         filename = secure_filename(file.filename)
+#         file_path = os.path.join(UPLOAD_FOLDER, filename)
+#         file.save(file_path)
+
+#         # Convert the image to RGB and save it as JPEG
+#         jpeg_file_path = convert_image_to_rgb(file_path)
+#         if jpeg_file_path is None:
+#             return jsonify({'message': 'Error converting image to RGB'}), 500
+
+#         # Ensure the new file was saved correctly
+#         if os.path.exists(jpeg_file_path):
+#             if jpeg_file_path != file_path:
+#                 os.remove(file_path)  # Remove the original file if different
+#         else:
+#             return jsonify({'message': 'File conversion failed'}), 500
+
+#         # Remove the old photo file if it exists
+#         old_photo_path = os.path.join(UPLOAD_FOLDER, user.photo_filename)
+#         if os.path.exists(old_photo_path):
+#             os.remove(old_photo_path)
+
+#         # Update the user's photo filename in the database
+#         user.photo_filename = os.path.basename(jpeg_file_path)
+#         db.session.commit()
+
+#         return jsonify({'message': 'Photo updated successfully', 'new_filename': user.photo_filename}), 200
+#     else:
+#         return jsonify({'message': 'Unsupported file type'}), 400
+
 @user_bp.route('/users/<int:user_id>/update_photo', methods=['PUT'])
 # @jwt_required()
 def update_user_photo(user_id):
@@ -282,12 +329,17 @@ def update_user_photo(user_id):
         return jsonify({'error': 'Empty filename'}), 400
 
     if file and allowed_file(file.filename):
-        # Secure the filename and save the new photo
-        filename = secure_filename(file.filename)
+        # Use the same filename as the existing photo
+        filename = user.photo_filename if user.photo_filename else secure_filename(file.filename)
         file_path = os.path.join(UPLOAD_FOLDER, filename)
+
+        # Remove the existing photo if it exists
+        if os.path.exists(file_path):
+            os.remove(file_path)
+
         file.save(file_path)
 
-        # Convert the image to RGB and save it as JPEG
+        # Convert the image to RGB and save it as JPEG with the same filename
         jpeg_file_path = convert_image_to_rgb(file_path)
         if jpeg_file_path is None:
             return jsonify({'message': 'Error converting image to RGB'}), 500
@@ -299,18 +351,15 @@ def update_user_photo(user_id):
         else:
             return jsonify({'message': 'File conversion failed'}), 500
 
-        # Remove the old photo file if it exists
-        old_photo_path = os.path.join(UPLOAD_FOLDER, user.photo_filename)
-        if os.path.exists(old_photo_path):
-            os.remove(old_photo_path)
-
-        # Update the user's photo filename in the database
-        user.photo_filename = os.path.basename(jpeg_file_path)
-        db.session.commit()
+        # Update the user's photo filename in the database if it was not set before
+        if not user.photo_filename:
+            user.photo_filename = os.path.basename(jpeg_file_path)
+            db.session.commit()
 
         return jsonify({'message': 'Photo updated successfully', 'new_filename': user.photo_filename}), 200
     else:
         return jsonify({'message': 'Unsupported file type'}), 400
+
 
 
 @user_bp.route('/login', methods=['POST'])
@@ -324,11 +373,12 @@ def login():
 
     user = Registration.query.filter_by(username=username).first()
 
-    if not user or not password:
-        return jsonify({'message': 'Invalid username or password'}), 401
+    if user and password:  # Ensure to check the password correctly
+        access_token = create_access_token(identity=user.id)
+        return jsonify({'message': 'Login successful', 'access_token': access_token}), 200
+    else:
+        return jsonify({'message': 'Invalid credentials'}), 401
     
-    access_token = create_access_token(identity=user.id)
-    return jsonify({'message': 'Login successful', 'access_token': access_token}), 200
 
 @user_bp.route('/users/<int:user_id>', methods=['DELETE'])
 @jwt_required()

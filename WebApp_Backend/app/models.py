@@ -3,26 +3,6 @@ from app import db
 from werkzeug.security import generate_password_hash, check_password_hash
 from sqlalchemy.dialects.postgresql import JSONB
 
-# class User(db.Model):
-#     __tablename__ = 'frs_db'
-#     id = db.Column(db.Integer, primary_key=True)
-#     name = db.Column(db.String(80), nullable=False)
-#     email = db.Column(db.String(120), unique=True, nullable=False)
-#     address = db.Column(db.String(200), nullable=True)
-#     face_encoding = db.Column(db.Text, nullable=True)
-#     mobile_number = db.Column(db.String(20), nullable=True)
-#     photo_filename = db.Column(db.String(120), nullable=True)
-
-#     def to_dict(self):
-#         return {
-#             'id': self.id,
-#             'name': self.name,
-#             'email': self.email,
-#             'address': self.address,
-#             'face_encoding': self.face_encoding,
-#             'mobile_number': self.mobile_number,
-#             'photo_filename': self.photo_filename
-#         }
 
 class Registration(db.Model):
     __tablename__ = 'registration'
