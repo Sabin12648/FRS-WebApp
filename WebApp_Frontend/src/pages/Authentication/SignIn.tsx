@@ -1,6 +1,6 @@
+import { ToastContainer, toast } from 'react-toastify';
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
 const SignIn: React.FC = () => {
@@ -26,8 +26,8 @@ const SignIn: React.FC = () => {
       if (response.ok) {
         // Handle successful login
         localStorage.setItem('token', data.access_token);
-        console.log('Token stored:', localStorage.getItem('token'));
         toast.success('Login successful');
+        console.log("toast", toast.success)
         navigate('/');
       } else {
         // Handle error

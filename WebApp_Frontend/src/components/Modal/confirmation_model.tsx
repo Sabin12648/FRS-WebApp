@@ -1,5 +1,8 @@
 import React from 'react';
 import PhotoComponent from '../PhotoDisplay';
+import Toast from '../Toast/index';
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 type ModalProps = {
   isOpen: boolean;
@@ -13,7 +16,7 @@ type ModalProps = {
     address?: string;
     photo_filename?: string;
   } | null;
-  // onSave: (user: any) => void; // You might want to replace 'any' with a more specific type
+  // onUpdate: () => void;
   children?: React.ReactNode; // Add children property
 };
 
@@ -22,24 +25,12 @@ const ConfirmationModal: React.FC<ModalProps> = ({
   onClose,
   onConfirm,
   user,
-  // onSave,
+  // onUpdate,
   children
 }) => {
   if (!isOpen) return null;
 
   const [formData, setFormData] = React.useState(user || {});
-
-  // const handleChange = (
-  //   e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
-  // ) => {
-  //   const { name, value } = e.target;
-  //   setFormData((prev) => ({
-  //     ...prev,
-  //     [name]: value,
-  //   }));
-  // };
-
-
   
   const handleDelete = async () => {
 
@@ -50,7 +41,7 @@ const ConfirmationModal: React.FC<ModalProps> = ({
     }
 
     try {
-      const response = await fetch(`http://127.0.0.1:5000/users/${user?.id}`, {
+      const response = await fetch(`http://192.168.1.121:5000/users/${user?.id}`, {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
@@ -61,9 +52,11 @@ const ConfirmationModal: React.FC<ModalProps> = ({
       if (response.ok) {
         const result = await response.json();
         console.log(result.message);
+        Toast(result.message , "success");
         onClose(); // Close the modal on successful delete
+        // onUpdate();
       } else {
-        const errorResult = await response.json();
+        const errorResult = await response.json();2
         console.error(errorResult.error);
       }
     } catch (error) {
@@ -97,6 +90,24 @@ const ConfirmationModal: React.FC<ModalProps> = ({
               <div className="p-7">
                 <form>
                   <div className="mb-5.5 flex flex-col gap-5.5 sm:flex-row">
+                  <div className="w-full sm:w-1/2">
+                      <label
+                        className="mb-3 block text-sm font-medium text-black dark:text-white"
+                        htmlFor="fullName"
+                      >
+                        Applicant Id
+                      </label>
+                      <div className="relative">
+                        <input
+                          type="text"
+                          name="name"
+                          value={formData.name || ''}
+                          // onChange={handleChange}
+                          disabled={true}
+                          className="w-full rounded border border-stroke bg-gray py-3 pl-2.5 pr-4.5 text-black focus:border-primary focus-visible:outline-none dark:border-strokedark dark:bg-meta-4 dark:text-white dark:focus:border-primary"
+                        />
+                      </div>
+                    </div>
                     <div className="w-full sm:w-1/2">
                       <label
                         className="mb-3 block text-sm font-medium text-black dark:text-white"
@@ -205,6 +216,7 @@ const ConfirmationModal: React.FC<ModalProps> = ({
         </div>
         
       </div>
+      <ToastContainer/>
     </div>
   );
 };

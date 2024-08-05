@@ -1,5 +1,5 @@
 import Breadcrumb from '../../components/Breadcrumbs/Breadcrumb';
-import TableThree from '../../components/Tables/ApplicantDataTable';
+import ApplicantData from '../../components/Tables/ApplicantDataTable';
 import DefaultLayout from '../../layout/DefaultLayout';
 
 const Tables = () => {
@@ -8,7 +8,7 @@ const Tables = () => {
       <Breadcrumb pageName="Tables" />
 
       <div className="flex flex-col gap-10">
-        <TableThree />
+        <ApplicantData />
       </div>
     </DefaultLayout>
   );

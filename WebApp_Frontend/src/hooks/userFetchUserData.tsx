@@ -3,7 +3,7 @@ import endpoints from '../constant/apiEndpoints';
 
 interface UserData {
   name: string;
-  applicantId : number;
+  applicant_id : number;
   photo_filename : string ;
   address : string;
   email : string;

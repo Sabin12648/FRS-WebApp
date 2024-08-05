@@ -36,7 +36,7 @@ const PhotoComponent: React.FC<PhotoComponentProps> = ({ photoFilename, isEditMo
     <div className="h-full w-full">
       {loading ? <Spinner/> : (
         <img src={imageSrc} alt="User" 
-        className="h-full w-full object-cover" 
+        className="object-cover" 
         />
       )}
     </div>

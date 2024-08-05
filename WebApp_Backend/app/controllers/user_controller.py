@@ -263,7 +263,7 @@ def upload_user():
         )
         db.session.add(new_user)
         db.session.commit()
-        return jsonify({'message': 'File and data successfully uploaded', 'encoding': face_encoding_list}), 200
+        return jsonify({'message': 'Applicant data submitted successfully', 'encoding': face_encoding_list}), 200
     else:
         os.remove(jpeg_file_path)  # Remove file if encoding failed
         return jsonify({'message': 'No face encoding found'}), 500

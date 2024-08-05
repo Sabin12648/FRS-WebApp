@@ -4,10 +4,10 @@ import { Route, Routes, useLocation, Navigate } from 'react-router-dom';
 import PageTitle from './components/PageTitle';
 import SignIn from './pages/Authentication/SignIn';
 import Profile from './pages/Profile';
-import Tables from './pages/DataManagement/Tables';
 import BulkUpload from './pages/BulkUpload';
 import Dashboard from './pages/Dashboard/Dashboard';
 import Spinner from './components/Spinner';
+import Tables from './pages/DataManagement/Tables';
 
 function App() {
   const [loading, setLoading] = useState<boolean>(true);

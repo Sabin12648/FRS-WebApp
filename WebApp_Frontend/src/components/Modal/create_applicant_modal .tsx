@@ -1,7 +1,10 @@
-import { toast, ToastContainer } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+// import { ToastContainer } from 'react-toastify';
+// import 'react-toastify/dist/ReactToastify.css';
 import useCreateUser from '../../hooks/useCreateUser';
 import { useState } from 'react';
+import Toast from '../Toast/index';
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 interface FormDataType {
   name: string;
@@ -62,10 +65,7 @@ const CreateApplicantModal: React.FC<ModalProps> = ({
     e.preventDefault();
   
     if (!selectedFile) {
-      toast.error('Please select a photo to upload!', {
-        position: toast.POSITION.TOP_CENTER,
-        autoClose: 3000,
-      });
+      Toast('Please select a photo to upload!', 'error');
       return;
     }
   
@@ -75,37 +75,30 @@ const CreateApplicantModal: React.FC<ModalProps> = ({
     formDataToSend.append('address', formData.address);
     formDataToSend.append('email', formData.email);
     formDataToSend.append('mobile_number', formData.mobile_number);
-    formDataToSend.append('photo', selectedFile); // Ensure the key matches the backend
-  
-    // Log FormData entries
-    for (let [key, value] of formDataToSend.entries()) {
-      console.log(key, value);
-    }
+    formDataToSend.append('photo', selectedFile);
   
     try {
       const response = await createUser(formDataToSend);
+      console.log('Response:', response);
   
       if (response) {
         onSave?.({ ...formData, photo_filename: selectedFile.name });
-        toast.success('User created successfully!', {
-          position: toast.POSITION.TOP_CENTER,
-          autoClose: 3000,
-        });
+        console.log('Showing success toast');
+        Toast(response.message , "success");
         onClose?.();
       }
     } catch (err) {
       console.error('Error creating user:', err);
-      toast.error('Error creating user!', {
-        position: toast.POSITION.TOP_CENTER,
-        autoClose: 3000,
-      });
+      Toast('Error creating user!', 'error');
     }
   };
   
   
+  
 
   return (
-    <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+    <>
+    <div className="fixed mt-10 inset-0 flex items-center justify-center bg-black bg-opacity-50 z-100">
       <div className="bg-white p-6 rounded-lg shadow-lg relative max-h-screen overflow-y-auto w-full max-w-4xl">
         <button
           onClick={onClose}
@@ -226,16 +219,18 @@ const CreateApplicantModal: React.FC<ModalProps> = ({
                     className="w-full py-2.5 px-4 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
                     disabled={isLoading}
                   >
-                    {isLoading ? 'Saving...' : 'Save'}
+                    {isLoading ? 'Submitting...' : 'Submit'}
                   </button>
                 </form>
               </div>
             </div>
           </div>
         </div>
-        <ToastContainer />
+
       </div>
     </div>
+    <ToastContainer />
+    </>
   );
 };
 

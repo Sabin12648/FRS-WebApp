@@ -8,7 +8,8 @@ type ModalProps = {
   isOpen: boolean;
   onClose: () => void;
   user?: {
-    id?: string;
+    id? : string;
+    applicant_id?: number;
     name?: string;
     mobile_number?: string;
     email?: string;
@@ -141,6 +142,24 @@ const ApplicantModal: React.FC<ModalProps> = ({
               <div className="p-7">
                 <form>
                   <div className="mb-5.5 flex flex-col gap-5.5 sm:flex-row">
+                  <div className="w-full sm:w-1/2">
+                      <label
+                        className="mb-3 block text-sm font-medium text-black dark:text-white"
+                        htmlFor="applicant_id"
+                      >
+                        Applicant Id
+                      </label>
+                      <div className="relative">
+                        <input
+                          type="text"
+                          name="name"
+                          value={formData.applicant_id || ''}
+                          onChange={handleChange}
+                          disabled={!isEditMode}
+                          className="w-full rounded border border-stroke bg-gray py-3 pl-2.5 pr-4.5 text-black focus:border-primary focus-visible:outline-none dark:border-strokedark dark:bg-meta-4 dark:text-white dark:focus:border-primary"
+                        />
+                      </div>
+                    </div>
                     <div className="w-full sm:w-1/2">
                       <label
                         className="mb-3 block text-sm font-medium text-black dark:text-white"

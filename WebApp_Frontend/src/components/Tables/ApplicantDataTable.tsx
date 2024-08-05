@@ -5,9 +5,11 @@ import PhotoComponent from '../PhotoDisplay';
 import ConfirmationModal from '../Modal/confirmation_model';
 import useFetchUserData from '../../hooks/userFetchUserData';
 import Spinner from '../Spinner';
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 type User = {
-  applicantId: number;
+  applicant_id: number;
   name: string;
   address: string;
   email: string;
@@ -24,7 +26,7 @@ const ApplicantData: React.FC = () => {
   const [isEditMode, setIsEditMode] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [searchParams, setSearchParams] = useState({
-    // applicantId: '',
+    applicant_id: '',
     filename: '',
     // phone_number: '',
     // email: '',
@@ -43,17 +45,31 @@ const ApplicantData: React.FC = () => {
     setSearchParams({ ...searchParams, [name]: value });
   };
 
+  // const filterData = () => {
+  //   return userData?.filter(user => {
+  //     return (
+  //       (!searchParams.applicantId || user.applicantId.toString().includes(searchParams.applicantId)) &&
+  //       (!searchParams.filename || user.photo_filename.toLowerCase().includes(searchParams.filename.toLowerCase())) 
+  //       // (!searchParams.address || user.address.toLowerCase().includes(searchParams.address.toLowerCase())) &&
+  //       // (!searchParams.email || user.email.toLowerCase().includes(searchParams.email.toLowerCase())) &&
+  //       // (!searchParams.phone_number || user.phone_number.includes(searchParams.phone_number))
+  //     );
+  //   });
+  // };
+
   const filterData = () => {
-    return userData?.filter(user => {
+    if (!userData) return [];
+    const applicant_id = parseInt(searchParams.applicant_id, 10); // Convert to number
+  
+    return userData.filter(user => {
       return (
-        // (!searchParams.applicantId || user.applicantId.toString().includes(searchParams.applicantId)) &&
+        (isNaN(applicant_id) || user.applicant_id === applicant_id) && // Compare numbers
         (!searchParams.filename || user.photo_filename.toLowerCase().includes(searchParams.filename.toLowerCase())) 
-        // (!searchParams.address || user.address.toLowerCase().includes(searchParams.address.toLowerCase())) &&
-        // (!searchParams.email || user.email.toLowerCase().includes(searchParams.email.toLowerCase())) &&
-        // (!searchParams.phone_number || user.phone_number.includes(searchParams.phone_number))
+        // Add other conditions as needed
       );
     });
   };
+  
 
   const filteredData = filterData();
   const totalPages = Math.ceil((filteredData?.length ?? 0) / itemsPerPage);
@@ -112,15 +128,16 @@ const ApplicantData: React.FC = () => {
   };
 
   return (
+    <>
     <div className="rounded-sm border border-stroke bg-white px-5 pt-6 pb-2.5 shadow-default dark:border-strokedark dark:bg-boxdark sm:px-7.5 xl:pb-1">
       {isFormVisible && (
         <form className="mb-4">
           Search Filename here
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3">
             {/* <input
-              type="text"
-              name="applicantId"
-              value={searchParams.applicantId}
+              type="number"
+              name="applicant_id"
+              value={searchParams.applicant_id}
               onChange={handleInputChange}
               placeholder="Applicant ID"
               className="px-4 py-2 border rounded"
@@ -195,7 +212,7 @@ const ApplicantData: React.FC = () => {
                 </td>
                 <td className="py-5 pl-9 xl:pl-11">
                   <h5 className="font-medium text-black dark:text-white">
-                    {user.applicantId}
+                    {user.applicant_id}
                   </h5>
                 </td>
                 <td className="py-5 pl-9 xl:pl-11">
@@ -255,7 +272,7 @@ const ApplicantData: React.FC = () => {
                       </svg>
                     </button>
                     <button className="hover:text-primary" onClick={() => openConfirmationModal(user)}>
-                      <svg
+                    <svg
                         className="fill-current"
                         width="18"
                         height="18"
@@ -264,7 +281,19 @@ const ApplicantData: React.FC = () => {
                         xmlns="http://www.w3.org/2000/svg"
                       >
                         <path
-                          d="M17.4375 4.005L14.0062 0.57375C13.485 0.0525 12.6537 0.0525 12.1325 0.57375L1.05124 11.655C0.877491 11.8287 0.758741 12.055 0.707491 12.3025L0.0187406 15.8412C-0.0187594 16.03 0.0474906 16.2212 0.180991 16.3537C0.287241 16.46 0.425991 16.5112 0.574991 16.5112C0.610991 16.5112 0.652491 16.5075 0.688741 16.4987L4.22749 15.81C4.47499 15.7587 4.70124 15.64 4.87499 15.4662L15.9562 4.385C16.4775 3.86375 16.4775 3.0325 15.9562 2.51125L17.4375 4.005ZM4.22749 14.2662L1.58099 14.7837L2.09874 12.1375L11.3487 2.8875L13.6125 5.15125L4.22749 14.2662ZM15.0187 3.47499L14.0575 4.43625L11.7937 2.1725L12.755 1.21125C12.8487 1.1175 12.9902 1.1175 13.084 1.21125L15.5152 3.64249C15.6087 3.73625 15.6087 3.8775 15.5152 3.97125H15.0187Z"
+                          d="M13.7535 2.47502H11.5879V1.9969C11.5879 1.15315 10.9129 0.478149 10.0691 0.478149H7.90352C7.05977 0.478149 6.38477 1.15315 6.38477 1.9969V2.47502H4.21914C3.40352 2.47502 2.72852 3.15002 2.72852 3.96565V4.8094C2.72852 5.42815 3.09414 5.9344 3.62852 6.1594L4.07852 15.4688C4.13477 16.6219 5.09102 17.5219 6.24414 17.5219H11.7004C12.8535 17.5219 13.8098 16.6219 13.866 15.4688L14.3441 6.13127C14.8785 5.90627 15.2441 5.3719 15.2441 4.78127V3.93752C15.2441 3.15002 14.5691 2.47502 13.7535 2.47502ZM7.67852 1.9969C7.67852 1.85627 7.79102 1.74377 7.93164 1.74377H10.0973C10.2379 1.74377 10.3504 1.85627 10.3504 1.9969V2.47502H7.70664V1.9969H7.67852ZM4.02227 3.96565C4.02227 3.85315 4.10664 3.74065 4.24727 3.74065H13.7535C13.866 3.74065 13.9785 3.82502 13.9785 3.96565V4.8094C13.9785 4.9219 13.8941 5.0344 13.7535 5.0344H4.24727C4.13477 5.0344 4.02227 4.95002 4.02227 4.8094V3.96565ZM11.7285 16.2563H6.27227C5.79414 16.2563 5.40039 15.8906 5.37227 15.3844L4.95039 6.2719H13.0785L12.6566 15.3844C12.6004 15.8625 12.2066 16.2563 11.7285 16.2563Z"
+                          fill=""
+                        />
+                        <path
+                          d="M9.00039 9.11255C8.66289 9.11255 8.35352 9.3938 8.35352 9.75942V13.3313C8.35352 13.6688 8.63477 13.9782 9.00039 13.9782C9.33789 13.9782 9.64727 13.6969 9.64727 13.3313V9.75942C9.64727 9.3938 9.33789 9.11255 9.00039 9.11255Z"
+                          fill=""
+                        />
+                        <path
+                          d="M11.2502 9.67504C10.8846 9.64692 10.6033 9.90004 10.5752 10.2657L10.4064 12.7407C10.3783 13.0782 10.6314 13.3875 10.9971 13.4157C11.0252 13.4157 11.0252 13.4157 11.0533 13.4157C11.3908 13.4157 11.6721 13.1625 11.6721 12.825L11.8408 10.35C11.8408 9.98442 11.5877 9.70317 11.2502 9.67504Z"
+                          fill=""
+                        />
+                        <path
+                          d="M6.72245 9.67504C6.38495 9.70317 6.1037 10.0125 6.13182 10.35L6.3287 12.825C6.35683 13.1625 6.63808 13.4157 6.94745 13.4157C6.97558 13.4157 6.97558 13.4157 7.0037 13.4157C7.3412 13.3875 7.62245 13.0782 7.59433 12.7407L7.39745 10.2657C7.39745 9.90004 7.08808 9.64692 6.72245 9.67504Z"
                           fill=""
                         />
                       </svg>
@@ -318,6 +347,8 @@ const ApplicantData: React.FC = () => {
         />
       )}
     </div>
+    <ToastContainer/>
+    </>
   );
 };
 
